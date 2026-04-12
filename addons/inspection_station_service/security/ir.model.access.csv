@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_inspection_site_user,inspection.site user,model_inspection_site,,1,0,0,0
+access_inspection_site_manager,inspection.site manager,model_inspection_site,base.group_system,1,1,1,1
+access_inspection_template_user,inspection.template user,model_inspection_template,,1,0,0,0
+access_inspection_template_manager,inspection.template manager,model_inspection_template,base.group_system,1,1,1,1
+access_inspection_question_user,inspection.question user,model_inspection_question,,1,0,0,0
+access_inspection_question_manager,inspection.question manager,model_inspection_question,base.group_system,1,1,1,1
+access_inspection_question_option_user,inspection.question.option user,model_inspection_question_option,,1,0,0,0
+access_inspection_question_option_manager,inspection.question.option manager,model_inspection_question_option,base.group_system,1,1,1,1
+access_inspection_report_user,inspection.report user,model_inspection_report,,1,1,1,0
+access_inspection_report_manager,inspection.report manager,model_inspection_report,base.group_system,1,1,1,1
+access_inspection_answer_user,inspection.answer user,model_inspection_answer,,1,1,1,0
+access_inspection_answer_manager,inspection.answer manager,model_inspection_answer,base.group_system,1,1,1,1
