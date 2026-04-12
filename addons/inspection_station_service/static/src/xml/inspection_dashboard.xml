@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+
+    <t t-name="InspectionDashboard">
+        <div class="o_inspection_dashboard o_action">
+
+            <!-- ── Toolbar ──────────────────────────────────────────────── -->
+            <div class="o_inspection_dashboard_toolbar d-flex justify-content-between align-items-center p-3 border-bottom">
+                <h3 class="mb-0">
+                    <i class="fa fa-tachometer mr-2 text-primary"/>
+                    Tableau de bord — Inspection Station Service
+                </h3>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm o_period_btn active" data-period="all">
+                        Tout
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm o_period_btn" data-period="year">
+                        Cette année
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm o_period_btn" data-period="month">
+                        Ce mois
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── KPI Cards ────────────────────────────────────────────── -->
+            <div class="o_inspection_kpi_row row mx-2 mt-3 mb-4">
+                <div class="col-xl-2 col-lg-4 col-md-6 col-sm-6 mb-3">
+                    <div class="card o_kpi_card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fa fa-clipboard-list fa-2x text-primary mb-2"/>
+                            <div class="o_kpi_label text-muted small">Total inspections</div>
+                            <div class="o_kpi_value h2 mb-0 text-primary" id="kpi-total">–</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-lg-4 col-md-6 col-sm-6 mb-3">
+                    <div class="card o_kpi_card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fa fa-check-circle fa-2x text-success mb-2"/>
+                            <div class="o_kpi_label text-muted small">Validées</div>
+                            <div class="o_kpi_value h2 mb-0 text-success" id="kpi-validated">–</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-lg-4 col-md-6 col-sm-6 mb-3">
+                    <div class="card o_kpi_card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fa fa-spinner fa-2x text-warning mb-2"/>
+                            <div class="o_kpi_label text-muted small">En cours</div>
+                            <div class="o_kpi_value h2 mb-0 text-warning" id="kpi-inprogress">–</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-lg-4 col-md-6 col-sm-6 mb-3">
+                    <div class="card o_kpi_card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fa fa-star fa-2x text-info mb-2"/>
+                            <div class="o_kpi_label text-muted small">Score moyen</div>
+                            <div class="o_kpi_value h2 mb-0 text-info" id="kpi-avgscore">–</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-lg-4 col-md-6 col-sm-6 mb-3">
+                    <div class="card o_kpi_card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fa fa-map-marker fa-2x text-danger mb-2"/>
+                            <div class="o_kpi_label text-muted small">Sites configurés</div>
+                            <div class="o_kpi_value h2 mb-0 text-danger" id="kpi-sites">–</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-lg-4 col-md-6 col-sm-6 mb-3">
+                    <div class="card o_kpi_card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <i class="fa fa-file-text fa-2x text-secondary mb-2"/>
+                            <div class="o_kpi_label text-muted small">Modèles</div>
+                            <div class="o_kpi_value h2 mb-0 text-secondary" id="kpi-templates">–</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Charts Row 1 : Pie + Bar ─────────────────────────────── -->
+            <div class="row mx-2 mb-4">
+                <!-- Pie chart: score distribution -->
+                <div class="col-lg-5 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header o_card_header">
+                            <i class="fa fa-pie-chart mr-2"/>
+                            Distribution des niveaux de score
+                        </div>
+                        <div class="card-body d-flex align-items-center justify-content-center"
+                             style="min-height:280px;">
+                            <div class="o_chart_empty" id="pie-empty"
+                                 style="display:none;text-align:center;color:#aaa;">
+                                <i class="fa fa-database fa-3x mb-2"/><br/>Aucune donnée disponible
+                            </div>
+                            <canvas id="pieChart" style="max-height:260px;"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bar chart: score per site -->
+                <div class="col-lg-7 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header o_card_header">
+                            <i class="fa fa-bar-chart mr-2"/>
+                            Score moyen par site (%)
+                        </div>
+                        <div class="card-body" style="min-height:280px;">
+                            <div class="o_chart_empty" id="bar-empty"
+                                 style="display:none;text-align:center;color:#aaa;padding-top:60px;">
+                                <i class="fa fa-database fa-3x mb-2"/><br/>Aucune donnée disponible
+                            </div>
+                            <canvas id="barChart" style="max-height:260px;"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Charts Row 2 : Radar + Line ──────────────────────────── -->
+            <div class="row mx-2 mb-4">
+                <!-- Radar chart: score by category -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header o_card_header">
+                            <i class="fa fa-crosshairs mr-2"/>
+                            Scores par catégorie — Graphique araignée (Radar)
+                        </div>
+                        <div class="card-body d-flex align-items-center justify-content-center"
+                             style="min-height:320px;">
+                            <div class="o_chart_empty" id="radar-empty"
+                                 style="display:none;text-align:center;color:#aaa;">
+                                <i class="fa fa-database fa-3x mb-2"/><br/>
+                                Aucune catégorie définie dans les questions
+                            </div>
+                            <canvas id="radarChart" style="max-height:300px;"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line chart: monthly trend -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header o_card_header">
+                            <i class="fa fa-line-chart mr-2"/>
+                            Tendance mensuelle des scores (12 derniers mois)
+                        </div>
+                        <div class="card-body" style="min-height:320px;">
+                            <canvas id="lineChart" style="max-height:300px;"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Shortcut buttons ──────────────────────────────────────── -->
+            <div class="row mx-2 mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body d-flex flex-wrap gap-2 justify-content-center">
+                            <button class="btn btn-primary o_action_btn" data-action="new_inspection">
+                                <i class="fa fa-plus mr-1"/>Nouvelle inspection
+                            </button>
+                            <button class="btn btn-outline-primary o_action_btn" data-action="all_inspections">
+                                <i class="fa fa-list mr-1"/>Toutes les inspections
+                            </button>
+                            <button class="btn btn-outline-secondary o_action_btn" data-action="sites">
+                                <i class="fa fa-map-marker mr-1"/>Gérer les sites
+                            </button>
+                            <button class="btn btn-outline-secondary o_action_btn" data-action="templates">
+                                <i class="fa fa-file-text mr-1"/>Modèles d'inspection
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </t>
+
+</templates>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Top-level application menu ────────────────────────────────────── -->
+    <menuitem id="menu_inspection_root"
+              name="Inspection Station"
+              sequence="90"
+              web_icon="inspection_station_service,static/description/icon.png"/>
+
+    <!-- ── Tableau de bord ────────────────────────────────────────────────── -->
+    <menuitem id="menu_inspection_dashboard"
+              name="Tableau de bord"
+              parent="menu_inspection_root"
+              action="action_inspection_dashboard"
+              sequence="1"/>
+
+    <!-- ── Inspections ────────────────────────────────────────────────────── -->
+    <menuitem id="menu_inspection_inspections"
+              name="Inspections"
+              parent="menu_inspection_root"
+              sequence="10"/>
+
+    <menuitem id="menu_inspection_new"
+              name="Nouvelle inspection"
+              parent="menu_inspection_inspections"
+              action="action_inspection_report_new"
+              sequence="1"/>
+
+    <menuitem id="menu_inspection_my"
+              name="Mes inspections"
+              parent="menu_inspection_inspections"
+              action="action_inspection_report_my"
+              sequence="5"/>
+
+    <menuitem id="menu_inspection_all"
+              name="Toutes les inspections"
+              parent="menu_inspection_inspections"
+              action="action_inspection_report"
+              sequence="10"/>
+
+    <!-- ── Configuration ──────────────────────────────────────────────────── -->
+    <menuitem id="menu_inspection_config"
+              name="Configuration"
+              parent="menu_inspection_root"
+              sequence="90"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_inspection_sites"
+              name="Sites / Stations"
+              parent="menu_inspection_config"
+              action="action_inspection_site"
+              sequence="10"/>
+
+    <menuitem id="menu_inspection_templates"
+              name="Modèles d'inspection"
+              parent="menu_inspection_config"
+              action="action_inspection_template"
+              sequence="20"/>
+
+</odoo>

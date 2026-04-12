@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Report list view ───────────────────────────────────────────────── -->
+    <record id="view_inspection_report_list" model="ir.ui.view">
+        <field name="name">inspection.report.list</field>
+        <field name="model">inspection.report</field>
+        <field name="arch" type="xml">
+            <tree string="Rapports d'inspection"
+                  decoration-success="score_level == 'excellent'"
+                  decoration-info="score_level == 'bon'"
+                  decoration-warning="score_level == 'moyen'"
+                  decoration-danger="score_level == 'faible'"
+                  decoration-muted="state == 'draft'">
+                <field name="name" string="Référence"/>
+                <field name="date"/>
+                <field name="site_id"/>
+                <field name="template_id"/>
+                <field name="inspector_id"/>
+                <field name="answered_count" string="Répondues"/>
+                <field name="total_questions" string="Total Q."/>
+                <field name="total_score" string="Score"/>
+                <field name="total_max_score" string="/ Max" optional="show"/>
+                <field name="score_percent" string="%" widget="percentage"/>
+                <field name="score_level" invisible="1"/>
+                <field name="state" widget="badge"
+                       decoration-secondary="state == 'draft'"
+                       decoration-warning="state == 'in_progress'"
+                       decoration-info="state == 'done'"
+                       decoration-success="state == 'validated'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ── Report form view ───────────────────────────────────────────────── -->
+    <record id="view_inspection_report_form" model="ir.ui.view">
+        <field name="name">inspection.report.form</field>
+        <field name="model">inspection.report</field>
+        <field name="arch" type="xml">
+            <form string="Rapport d'inspection">
+                <header>
+                    <button name="action_start"
+                            string="Démarrer l'inspection"
+                            type="object"
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                    <button name="action_done"
+                            string="Terminer"
+                            type="object"
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', '!=', 'in_progress')]}"/>
+                    <button name="action_validate"
+                            string="Valider"
+                            type="object"
+                            class="btn-success"
+                            attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                    <button name="action_reset_draft"
+                            string="Remettre en brouillon"
+                            type="object"
+                            attrs="{'invisible': [('state', 'in', ['draft', 'validated'])]}"/>
+                    <button name="action_load_questions"
+                            string="Charger les questions"
+                            type="object"
+                            class="btn-secondary"
+                            attrs="{'invisible': [('state', 'not in', ['draft', 'in_progress'])]}"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,in_progress,done,validated"/>
+                </header>
+
+                <sheet>
+                    <!-- Score banner -->
+                    <div class="o_inspection_score_banner alert mb-3"
+                         attrs="{'invisible': [('state', 'in', ['draft'])]}">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="o_score_label">Score obtenu</div>
+                                <div class="o_score_value">
+                                    <field name="total_score" readonly="1"/> /
+                                    <field name="total_max_score" readonly="1"/>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="o_score_label">Pourcentage</div>
+                                <div class="o_score_big">
+                                    <field name="score_percent" widget="percentage" readonly="1"/>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="o_score_label">Niveau</div>
+                                <div class="o_score_level">
+                                    <field name="score_level" readonly="1"/>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="o_score_label">Questions répondues</div>
+                                <div class="o_score_value">
+                                    <field name="answered_count" readonly="1"/> /
+                                    <field name="total_questions" readonly="1"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Identification">
+                            <field name="site_id"
+                                   attrs="{'readonly': [('state', 'in', ['done', 'validated'])]}"/>
+                            <field name="template_id"
+                                   attrs="{'readonly': [('state', 'in', ['done', 'validated'])]}"/>
+                            <field name="date"
+                                   attrs="{'readonly': [('state', 'in', ['done', 'validated'])]}"/>
+                        </group>
+                        <group string="Inspecteur">
+                            <field name="inspector_id"/>
+                            <field name="state" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <!-- ── Tab 1 : Réponses ────────────────────────────── -->
+                        <page string="Réponses aux questions" name="answers">
+                            <field name="answer_ids" nolabel="1"
+                                   context="{'default_report_id': active_id}"
+                                   attrs="{'readonly': [('state', '=', 'validated')]}">
+                                <tree editable="bottom" string="Réponses"
+                                      decoration-success="is_answered == True and score &gt; 0"
+                                      decoration-danger="required == True and is_answered == False">
+                                    <field name="question_id" readonly="1" string="Question"/>
+                                    <field name="question_category" optional="show" string="Catégorie"/>
+                                    <field name="question_type" readonly="1" string="Type"/>
+                                    <field name="required" invisible="1"/>
+                                    <field name="is_answered" invisible="1"/>
+
+                                    <!-- Answer fields – shown conditionally per row -->
+                                    <field name="answer_text"
+                                           attrs="{'invisible': [('question_type', '!=', 'text')],
+                                                   'required': [('question_type', '=', 'text'), ('required', '=', True)]}"
+                                           optional="show"/>
+                                    <field name="answer_date"
+                                           attrs="{'invisible': [('question_type', '!=', 'date')],
+                                                   'required': [('question_type', '=', 'date'), ('required', '=', True)]}"
+                                           optional="show"/>
+                                    <field name="answer_number"
+                                           attrs="{'invisible': [('question_type', 'not in', ['number'])],
+                                                   'required': [('question_type', '=', 'number'), ('required', '=', True)]}"
+                                           optional="show"/>
+                                    <field name="answer_selection_id"
+                                           attrs="{'invisible': [('question_type', '!=', 'selection')],
+                                                   'required': [('question_type', '=', 'selection'), ('required', '=', True)]}"
+                                           optional="show"/>
+                                    <field name="answer_barcode"
+                                           attrs="{'invisible': [('question_type', '!=', 'barcode')],
+                                                   'required': [('question_type', '=', 'barcode'), ('required', '=', True)]}"
+                                           optional="show"/>
+                                    <field name="answer_qrcode"
+                                           attrs="{'invisible': [('question_type', '!=', 'qrcode')],
+                                                   'required': [('question_type', '=', 'qrcode'), ('required', '=', True)]}"
+                                           optional="show"/>
+                                    <field name="answer_author_id"
+                                           attrs="{'invisible': [('question_type', '!=', 'author')],
+                                                   'required': [('question_type', '=', 'author'), ('required', '=', True)]}"
+                                           optional="show"/>
+                                    <field name="answer_location"
+                                           attrs="{'invisible': [('question_type', '!=', 'location')],
+                                                   'required': [('question_type', '=', 'location'), ('required', '=', True)]}"
+                                           optional="show"/>
+                                    <field name="answer_signature"
+                                           widget="image"
+                                           attrs="{'invisible': [('question_type', '!=', 'signature')]}"
+                                           optional="show"
+                                           options="{'size': [32, 32]}"/>
+
+                                    <field name="max_score" readonly="1" string="/ Max" optional="show"/>
+                                    <field name="score" string="Score"
+                                           attrs="{'readonly': [('question_type', 'in', ['selection', 'formula'])]}"/>
+                                </tree>
+
+                                <!-- Form view for each answer (popup when clicking edit) -->
+                                <form string="Réponse">
+                                    <group>
+                                        <group>
+                                            <field name="question_id" readonly="1"/>
+                                            <field name="question_type" readonly="1"/>
+                                            <field name="question_category" readonly="1"/>
+                                            <field name="max_score" readonly="1"/>
+                                            <field name="required" readonly="1"/>
+                                        </group>
+                                        <group>
+                                            <field name="score"
+                                                   attrs="{'readonly': [('question_type', 'in', ['selection', 'formula'])]}"/>
+                                            <field name="is_answered" readonly="1"/>
+                                        </group>
+                                    </group>
+
+                                    <!-- Dynamic answer widget based on type -->
+                                    <group string="Réponse"
+                                           attrs="{'invisible': [('question_type', '!=', 'text')]}">
+                                        <field name="answer_text" nolabel="1"
+                                               placeholder="Saisissez votre réponse..."/>
+                                    </group>
+                                    <group string="Réponse"
+                                           attrs="{'invisible': [('question_type', '!=', 'selection')]}">
+                                        <field name="answer_selection_id" nolabel="1"
+                                               domain="[('question_id', '=', question_id)]"/>
+                                    </group>
+                                    <group string="Réponse"
+                                           attrs="{'invisible': [('question_type', '!=', 'date')]}">
+                                        <field name="answer_date" nolabel="1"/>
+                                    </group>
+                                    <group string="Réponse"
+                                           attrs="{'invisible': [('question_type', '!=', 'number')]}">
+                                        <field name="answer_number" nolabel="1"/>
+                                    </group>
+                                    <group string="Signature"
+                                           attrs="{'invisible': [('question_type', '!=', 'signature')]}">
+                                        <field name="answer_signature" nolabel="1"
+                                               widget="signature"
+                                               attrs="{'invisible': [('question_type', '!=', 'signature')]}"/>
+                                    </group>
+                                    <group string="Code barre"
+                                           attrs="{'invisible': [('question_type', '!=', 'barcode')]}">
+                                        <field name="answer_barcode" nolabel="1"
+                                               placeholder="Scannez ou saisissez le code barre..."/>
+                                    </group>
+                                    <group string="QR Code"
+                                           attrs="{'invisible': [('question_type', '!=', 'qrcode')]}">
+                                        <field name="answer_qrcode" nolabel="1"
+                                               placeholder="Scannez ou saisissez le QR Code..."/>
+                                    </group>
+                                    <group string="Auteur / Intervenant"
+                                           attrs="{'invisible': [('question_type', '!=', 'author')]}">
+                                        <field name="answer_author_id" nolabel="1"/>
+                                    </group>
+                                    <group string="Localisation"
+                                           attrs="{'invisible': [('question_type', '!=', 'location')]}">
+                                        <field name="answer_location" nolabel="1"
+                                               placeholder="Ex : 14.716677, -17.467686 ou description du lieu..."/>
+                                    </group>
+                                    <group string="Formule (calculé automatiquement)"
+                                           attrs="{'invisible': [('question_type', '!=', 'formula')]}">
+                                        <field name="score" readonly="1" string="Score calculé"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+
+                        <!-- ── Tab 2 : Score détaillé ─────────────────────── -->
+                        <page string="Récapitulatif des scores" name="scores"
+                              attrs="{'invisible': [('state', '=', 'draft')]}">
+                            <div class="o_inspection_score_summary">
+                                <field name="answer_ids" readonly="1">
+                                    <tree string="Récapitulatif"
+                                          decoration-success="score == max_score and max_score &gt; 0"
+                                          decoration-warning="score &gt; 0 and score &lt; max_score"
+                                          decoration-danger="score == 0 and is_answered == False">
+                                        <field name="question_id" string="Question"/>
+                                        <field name="question_category" string="Catégorie"/>
+                                        <field name="question_type" string="Type"/>
+                                        <field name="is_answered" string="Répondu" widget="boolean"/>
+                                        <field name="score" string="Score obtenu"/>
+                                        <field name="max_score" string="Score max"/>
+                                    </tree>
+                                </field>
+                            </div>
+                        </page>
+
+                        <!-- ── Tab 3 : Observations et signature ─────────── -->
+                        <page string="Clôture et signature" name="closure">
+                            <group>
+                                <field name="note" placeholder="Observations générales de l'inspecteur..."/>
+                            </group>
+                            <group string="Signature du valideur"
+                                   attrs="{'invisible': [('state', 'not in', ['done', 'validated'])]}">
+                                <field name="global_signature" widget="signature" nolabel="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Report kanban view ─────────────────────────────────────────────── -->
+    <record id="view_inspection_report_kanban" model="ir.ui.view">
+        <field name="name">inspection.report.kanban</field>
+        <field name="model">inspection.report</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_inspection_kanban">
+                <field name="name"/>
+                <field name="site_id"/>
+                <field name="date"/>
+                <field name="inspector_id"/>
+                <field name="score_percent"/>
+                <field name="score_level"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_body">
+                                    <div><i class="fa fa-building mr-1 text-muted"/><field name="site_id"/></div>
+                                    <div><i class="fa fa-calendar mr-1 text-muted"/><field name="date"/></div>
+                                    <div><i class="fa fa-user mr-1 text-muted"/><field name="inspector_id"/></div>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <t t-if="record.state.raw_value != 'draft'">
+                                            <span t-att-class="'badge badge-pill ' + (record.score_level.raw_value == 'excellent' ? 'badge-success' : record.score_level.raw_value == 'bon' ? 'badge-info' : record.score_level.raw_value == 'moyen' ? 'badge-warning' : 'badge-danger')">
+                                                <t t-esc="record.score_percent.value"/>%
+                                            </span>
+                                        </t>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <field name="inspector_id" widget="many2one_avatar_user"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ── Report search view ─────────────────────────────────────────────── -->
+    <record id="view_inspection_report_search" model="ir.ui.view">
+        <field name="name">inspection.report.search</field>
+        <field name="model">inspection.report</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher une inspection">
+                <field name="name" string="Référence"/>
+                <field name="site_id"/>
+                <field name="template_id"/>
+                <field name="inspector_id"/>
+                <separator/>
+                <filter string="Mes inspections" name="mine"
+                        domain="[('inspector_id', '=', uid)]"/>
+                <separator/>
+                <filter string="Brouillon" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="En cours" name="in_progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter string="Terminées" name="done" domain="[('state', '=', 'done')]"/>
+                <filter string="Validées" name="validated" domain="[('state', '=', 'validated')]"/>
+                <separator/>
+                <filter string="Excellent (≥80%)" name="excellent" domain="[('score_level', '=', 'excellent')]"/>
+                <filter string="Bon (60–79%)" name="bon" domain="[('score_level', '=', 'bon')]"/>
+                <filter string="Moyen (40–59%)" name="moyen" domain="[('score_level', '=', 'moyen')]"/>
+                <filter string="Faible (&lt;40%)" name="faible" domain="[('score_level', '=', 'faible')]"/>
+                <separator/>
+                <filter string="Ce mois" name="this_month"
+                        domain="[('date', '&gt;=', (context_today() + relativedelta(day=1)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter string="Site" name="grp_site" context="{'group_by': 'site_id'}"/>
+                    <filter string="Modèle" name="grp_template" context="{'group_by': 'template_id'}"/>
+                    <filter string="Inspecteur" name="grp_inspector" context="{'group_by': 'inspector_id'}"/>
+                    <filter string="Statut" name="grp_state" context="{'group_by': 'state'}"/>
+                    <filter string="Date" name="grp_date" context="{'group_by': 'date:month'}"/>
+                    <filter string="Niveau" name="grp_level" context="{'group_by': 'score_level'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Report graph view ──────────────────────────────────────────────── -->
+    <record id="view_inspection_report_graph" model="ir.ui.view">
+        <field name="name">inspection.report.graph</field>
+        <field name="model">inspection.report</field>
+        <field name="arch" type="xml">
+            <graph string="Scores des inspections" type="bar">
+                <field name="site_id"/>
+                <field name="score_percent" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- ── Report pivot view ──────────────────────────────────────────────── -->
+    <record id="view_inspection_report_pivot" model="ir.ui.view">
+        <field name="name">inspection.report.pivot</field>
+        <field name="model">inspection.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Analyse des inspections">
+                <field name="site_id" type="row"/>
+                <field name="date" interval="month" type="col"/>
+                <field name="score_percent" type="measure"/>
+                <field name="total_score" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- ── Report actions ─────────────────────────────────────────────────── -->
+    <record id="action_inspection_report" model="ir.actions.act_window">
+        <field name="name">Inspections</field>
+        <field name="res_model">inspection.report</field>
+        <field name="view_mode">list,kanban,form,graph,pivot</field>
+        <field name="search_view_id" ref="view_inspection_report_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créez votre première inspection
+            </p>
+            <p>
+                Sélectionnez un site et un modèle d'inspection pour commencer.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_inspection_report_my" model="ir.actions.act_window">
+        <field name="name">Mes inspections</field>
+        <field name="res_model">inspection.report</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('inspector_id', '=', uid)]</field>
+        <field name="search_view_id" ref="view_inspection_report_search"/>
+    </record>
+
+    <record id="action_inspection_report_new" model="ir.actions.act_window">
+        <field name="name">Nouvelle inspection</field>
+        <field name="res_model">inspection.report</field>
+        <field name="view_mode">form,list</field>
+        <field name="context">{'default_state': 'draft'}</field>
+    </record>
+
+</odoo>
